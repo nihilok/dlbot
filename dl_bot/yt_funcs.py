@@ -26,7 +26,8 @@ async def set_tags(filepath, title, artist=None):
     try:
         metatag = EasyID3(filepath)
         metatag['title'] = title
-        metatag['artist'] = artist
+        if artist is not None:
+            metatag['artist'] = artist
         metatag.save()
     except Exception as e:
         logger.error(f"Error settings tags: {e}")
