@@ -34,9 +34,9 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
             files = [full_path]
         else:
             files = [file for file in get_new_files()]
+            os.remove(full_path)
         for file in files:
             await set_tags(file, title, artist)
             with open(file, 'rb') as f:
                 await context.bot.send_audio(update.effective_chat.id, f)
             os.remove(file)
-        os.remove(full_path)
