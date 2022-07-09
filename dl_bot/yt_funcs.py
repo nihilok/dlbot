@@ -1,3 +1,5 @@
+import os
+
 import yt_dlp
 from mutagen.easyid3 import EasyID3
 import logging
@@ -42,9 +44,13 @@ async def set_tags(filepath, title, artist=None):
 
 async def download_single_url(url):
     artist, title = await get_metadata(url)
-    filename = f'{artist + " - " if artist else ""}{title}.mp3'
+    base_name = f'{artist + " - " if artist else ""}{title}'
+    outtmpl = f'{base_name}.%(ext)s'
+    filename = f'{base_name}.mp3'
+    if os.path.exists(filename):
+        return filename, 0
     opts = YT_OPTS.copy()
-    opts['outtmpl'] = filename
+    opts['outtmpl'] = outtmpl
     with yt_dlp.YoutubeDL(opts) as ydl:
         exit_code = ydl.download([url])
     await set_tags(filename, title, artist)
@@ -52,4 +58,6 @@ async def download_single_url(url):
 
 
 if __name__ == "__main__":
-    print(help(yt_dlp.YoutubeDL))
+    import sys
+    import asyncio
+    asyncio.run(download_single_url(sys.argv[1]))
