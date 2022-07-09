@@ -48,13 +48,12 @@ async def download_single_url(url):
     outtmpl = f'{base_name}.%(ext)s'
     filename = f'{base_name}.mp3'
     if os.path.exists(filename):
-        return filename, 0
+        return filename, artist, title, 0
     opts = YT_OPTS.copy()
     opts['outtmpl'] = outtmpl
     with yt_dlp.YoutubeDL(opts) as ydl:
         exit_code = ydl.download([url])
-    await set_tags(filename, title, artist)
-    return filename, exit_code
+    return filename, artist, title, exit_code
 
 
 if __name__ == "__main__":

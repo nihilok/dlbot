@@ -2,8 +2,10 @@ import os
 import subprocess
 
 
-def get_new_files():
+def get_new_files(reverse_order=True):
     for root, dirs, files in os.walk(".", topdown=False):
+        if reverse_order:
+            files = reversed(files)
         for file in files:
             if 's__' in file and '.mp3' in file:
                 yield file
