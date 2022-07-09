@@ -19,6 +19,8 @@ async def get_metadata(url):
         result = ydl.extract_info(url, download=False)
     artist = result.get('artist')
     title = result.get('title') or result.get('alt_title')
+    if artist is None and ' - ' in title:
+        artist = title.split(' - ')[0]
     return artist, title
 
 
