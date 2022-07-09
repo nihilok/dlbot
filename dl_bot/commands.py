@@ -4,7 +4,7 @@ from pathlib import Path
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from yt_funcs import download_single_url
+from dl_bot.yt_funcs import download_single_url
 
 
 PATH = Path(os.path.dirname(os.path.dirname(__file__)))
