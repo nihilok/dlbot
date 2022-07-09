@@ -6,7 +6,8 @@ YT_OPTS = {
         'key': 'FFmpegExtractAudio',
         'preferredcodec': 'mp3',
     }],
-    "noplaylist": True
+    "noplaylist": True,
+    "addmetadata": True,
 }
 
 
