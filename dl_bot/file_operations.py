@@ -3,12 +3,13 @@ import subprocess
 
 
 def get_new_files(reverse_order=True):
-    for root, dirs, files in os.walk(".", topdown=False):
-        if reverse_order:
-            files = reversed(files)
-        for file in files:
-            if 's__' in file and '.mp3' in file:
-                yield file
+    search_dir = "./"
+    files = filter(os.path.isfile, os.listdir(search_dir))
+    files = [os.path.join(search_dir, f) for f in files]  # add path to each file
+    files.sort(key=lambda x: os.path.getmtime(x), reverse=reverse_order)
+    for file in files:
+        if 's__' in file and '.mp3' in file:
+            yield file
 
 
 def split_large_file(filepath):
