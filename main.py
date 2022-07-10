@@ -1,4 +1,5 @@
-from dl_bot.application import build_and_run
+from dl_bot.bot import DlBot
 
 if __name__ == "__main__":
-    build_and_run()
+    bot = DlBot()
+    bot.build_and_run()

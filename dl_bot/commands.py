@@ -1,17 +1,31 @@
+import datetime
+import json
 import os
 import re
 from pathlib import Path
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from dl_bot.file_operations import split_large_file, get_new_files
-from dl_bot.yt_funcs import download_single_url, set_tags
+from dl_bot.yt_funcs import download_single_url
 
 PATH = Path(os.path.dirname(os.path.dirname(__file__)))
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    with open("visitors.csv", 'a') as f:
+        f.write(f'{update.effective_user.id},{update.effective_user.username},{datetime.datetime.now().isoformat()},\n')
     await context.bot.send_message(chat_id=update.effective_chat.id, text="dlbot at your service, boop beep!")
+
+
+def get_users():
+    with open('dl_bot/users.json', 'r') as f:
+        try:
+            return json.load(f)
+        except FileNotFoundError as e:
+            print(e)
+            with open('dl_bot/users.json', 'w') as g:
+                json.dump({"superuser": 0, "users": []}, g)
+            return get_users()
 
 
 async def parse_message_for_urls(message):
@@ -27,16 +41,3 @@ async def download_url_list(message):
             yield filename, artist, title
 
 
-async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    async for mp3, artist, title in download_url_list(update.message.text):
-        full_path = PATH / mp3
-        if split_large_file(full_path) is False:
-            files = [full_path]
-        else:
-            files = [file for file in get_new_files()]
-            os.remove(full_path)
-        for file in files:
-            await set_tags(file, title, artist)
-            with open(file, 'rb') as f:
-                await context.bot.send_audio(update.effective_chat.id, f)
-            os.remove(file)
