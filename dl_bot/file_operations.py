@@ -2,6 +2,10 @@ import os
 import subprocess
 
 
+async def sanitise_filename(filename):
+    return filename.replace('/', '-')
+
+
 def get_new_files(reverse_order=True):
     search_dir = "./"
     files = filter(os.path.isfile, os.listdir(search_dir))

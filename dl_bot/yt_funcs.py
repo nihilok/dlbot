@@ -4,6 +4,8 @@ import yt_dlp
 from mutagen.easyid3 import EasyID3
 import logging
 
+from dl_bot.file_operations import sanitise_filename
+
 logger = logging.getLogger(__name__)
 
 YT_OPTS = {
@@ -44,7 +46,7 @@ async def set_tags(filepath, title, artist=None):
 
 async def download_single_url(url):
     artist, title = await get_metadata(url)
-    base_name = f'{artist + " - " if artist else ""}{title}'
+    base_name = await sanitise_filename(f'{artist + " - " if artist else ""}{title}')
     outtmpl = f'{base_name}.%(ext)s'
     filename = f'{base_name}.mp3'
     if os.path.exists(filename):
