@@ -13,7 +13,7 @@ PATH = Path(os.path.dirname(os.path.dirname(__file__)))
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with open("visitors.csv", 'a') as f:
-        f.write(f'{update.effective_user.id},{update.effective_user.username},{datetime.datetime.now().isoformat()},\n')
+        f.write(f'{update.effective_user.id},{update.effective_user.username},{update.effective_chat.id},{datetime.datetime.now().isoformat()},\n')
     await context.bot.send_message(chat_id=update.effective_chat.id, text="dlbot at your service, boop beep!")
 
 
@@ -24,7 +24,7 @@ def get_users():
         except FileNotFoundError as e:
             print(e)
             with open('dl_bot/users.json', 'w') as g:
-                json.dump({"superuser": 0, "users": []}, g)
+                json.dump({"superuser": 0, "users": [], "chats": []}, g)
             return get_users()
 
 
@@ -39,5 +39,3 @@ async def download_url_list(message):
         filename, artist, title, exit_code = await download_single_url(url)
         if not exit_code:
             yield filename, artist, title
-
-

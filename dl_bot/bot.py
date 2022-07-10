@@ -23,6 +23,8 @@ class DlBot:
         application.run_polling()
 
     async def check_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.effective_chat.id in self.users["chats"]:
+            return True
         if (user_id := update.effective_user.id) not in self.users['users']:
             if user_id != self.users['superuser']:
                 await context.bot.send_message(update.effective_chat.id, "Sorry this bot is restricted")
