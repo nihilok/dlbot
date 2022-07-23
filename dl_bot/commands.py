@@ -47,6 +47,6 @@ async def whitelist_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except AttributeError:
         await context.bot.send_message(
             update.effective_chat.id,
-            "You must reply to a message to user this command."
+            "You must reply to a message to use this command."
         )
 
