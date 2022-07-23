@@ -5,13 +5,16 @@ from functools import wraps
 from telegram import Update
 from telegram.ext import ContextTypes
 
-
 USER_FILE = 'dl_bot/users.json'
 
 
 class UnauthorizedUserException(Exception):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        asyncio.run(context.bot.send_message(update.effective_chat.id, 'You are not authorised to perform this action.'))
+        loop = asyncio.get_running_loop()
+        loop.run_until_complete(context.bot.send_message(
+            update.effective_chat.id,
+            'You are not authorised to perform this action.'
+        ))
         super().__init__()
 
 
@@ -34,6 +37,7 @@ def require_superuser(f):
         if update.effective_user.id != superuser:
             raise UnauthorizedUserException(update, context)
         return await f(update, context)
+
     return wrapped_handler
 
 
@@ -67,5 +71,3 @@ def remove_group_from_file(chat_id: int):
     users["chats"].remove(chat_id)
     with open(USER_FILE, 'w') as f:
         json.dump(users, f)
-
-
