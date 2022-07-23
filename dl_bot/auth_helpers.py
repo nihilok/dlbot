@@ -11,7 +11,7 @@ USER_FILE = 'dl_bot/users.json'
 class UnauthorizedUserException(Exception):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         loop = asyncio.get_running_loop()
-        loop.run_until_complete(context.bot.send_message(
+        loop.create_task(context.bot.send_message(
             update.effective_chat.id,
             'You are not authorised to perform this action.'
         ))
