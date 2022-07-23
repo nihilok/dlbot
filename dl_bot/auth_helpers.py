@@ -10,8 +10,8 @@ USER_FILE = 'dl_bot/users.json'
 
 
 class UnauthorizedUserException(Exception):
-    def __init__(self, context: ContextTypes.DEFAULT_TYPE):
-        asyncio.run(context.bot.send_message('You are not authorised to perform this action.'))
+    def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        asyncio.run(context.bot.send_message(update.effective_chat.id, 'You are not authorised to perform this action.'))
         super().__init__()
 
 
@@ -32,7 +32,7 @@ def require_superuser(f):
         user_dict = get_users()
         superuser = user_dict["superuser"]
         if update.effective_user.id != superuser:
-            raise UnauthorizedUserException(context)
+            raise UnauthorizedUserException(update, context)
         return await f(update, context)
     return wrapped_handler
 

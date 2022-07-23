@@ -35,11 +35,11 @@ async def download_url_list(message):
 async def whitelist_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     group_id = update.effective_chat.id
     await add_group_to_file(group_id)
-    await context.bot.send_message(f"Group whitelisted: ({group_id})")
+    await context.bot.send_message(group_id, f"Group whitelisted: ({group_id})")
 
 
 @require_superuser
 async def whitelist_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     await add_user_to_file(user_id)
-    await context.bot.send_message(f"User whitelisted: ({user_id})")
+    await context.bot.send_message(update.effective_chat.id, f"User whitelisted: ({user_id})")
