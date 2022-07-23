@@ -1,6 +1,11 @@
+import os
+import re
+
 import yt_dlp
 from mutagen.easyid3 import EasyID3
 import logging
+
+from dl_bot.file_operations import sanitise_filename
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +27,7 @@ async def get_metadata(url):
     try:
         if artist is None and ' - ' in title:
             artist = title.split(' - ')[0]
-            title = title.split(' - ')[1]
+            title = title.split(' - ')[-1]
     except IndexError:
         artist = None
         title = result.get('title') or result.get('alt_title')
@@ -42,14 +47,32 @@ async def set_tags(filepath, title, artist=None):
 
 async def download_single_url(url):
     artist, title = await get_metadata(url)
-    filename = f'{artist + " - " if artist else ""}{title}.mp3'
+    base_name = await sanitise_filename(f'{artist + " - " if artist else ""}{title}')
+    outtmpl = f'{base_name}.%(ext)s'
+    filename = f'{base_name}.mp3'
+    if os.path.exists(filename):
+        return filename, artist, title, 0
     opts = YT_OPTS.copy()
-    opts['outtmpl'] = filename
+    opts['outtmpl'] = outtmpl
     with yt_dlp.YoutubeDL(opts) as ydl:
         exit_code = ydl.download([url])
-    await set_tags(filename, title, artist)
-    return filename, exit_code
+    return filename, artist, title, exit_code
+
+
+async def parse_message_for_urls(message):
+    urls = re.findall(r'https://\S+', message)
+    for url in urls:
+        yield url
+
+
+async def download_url_list(message):
+    async for url in parse_message_for_urls(message):
+        filename, artist, title, exit_code = await download_single_url(url)
+        if not exit_code:
+            yield filename, artist, title
 
 
 if __name__ == "__main__":
-    print(help(yt_dlp.YoutubeDL))
+    import sys
+    import asyncio
+    asyncio.run(download_single_url(sys.argv[1]))
