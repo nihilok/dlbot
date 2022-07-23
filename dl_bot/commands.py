@@ -40,6 +40,13 @@ async def whitelist_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @require_superuser
 async def whitelist_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.reply_to_message.from_user.id
-    await add_user_to_file(user_id)
-    await context.bot.send_message(update.effective_chat.id, f"User whitelisted: ({user_id})")
+    try:
+        user_id = update.message.reply_to_message.from_user.id
+        await add_user_to_file(user_id)
+        await context.bot.send_message(update.effective_chat.id, f"User whitelisted: ({user_id})")
+    except AttributeError:
+        await context.bot.send_message(
+            update.effective_chat.id,
+            "You must reply to a message to user this command."
+        )
+
