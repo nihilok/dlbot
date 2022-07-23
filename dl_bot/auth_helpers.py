@@ -29,6 +29,17 @@ def get_users():
             return get_users()
 
 
+async def check_auth(update: Update):
+    users = get_users()
+    if update.effective_chat.id in users["chats"]:
+        return True
+    if (user_id := update.effective_user.id) in users['users']:
+        return True
+    if user_id == users['superuser']:
+        return True
+    return False
+
+
 def require_superuser(f):
     @wraps(f)
     async def wrapped_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -41,7 +52,7 @@ def require_superuser(f):
     return wrapped_handler
 
 
-async def add_user_to_file(user_id: int):
+async def add_user(user_id: int):
     users = get_users()
     user_set = set(users["users"])
     user_set.add(user_id)
@@ -50,7 +61,7 @@ async def add_user_to_file(user_id: int):
         json.dump(users, f)
 
 
-async def remove_user_from_file(user_id: int):
+async def remove_user(user_id: int):
     users = get_users()
     if user_id not in users["users"]:
         return
@@ -59,7 +70,7 @@ async def remove_user_from_file(user_id: int):
         json.dump(users, f)
 
 
-async def add_group_to_file(chat_id: int):
+async def add_group(chat_id: int):
     users = get_users()
     chat_set = set(users["chats"])
     chat_set.add(chat_id)
@@ -68,7 +79,7 @@ async def add_group_to_file(chat_id: int):
         json.dump(users, f)
 
 
-async def remove_group_from_file(chat_id: int):
+async def remove_group(chat_id: int):
     users = get_users()
     if chat_id not in users["chats"]:
         return

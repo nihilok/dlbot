@@ -1,4 +1,5 @@
 import os
+import re
 
 import yt_dlp
 from mutagen.easyid3 import EasyID3
@@ -56,6 +57,19 @@ async def download_single_url(url):
     with yt_dlp.YoutubeDL(opts) as ydl:
         exit_code = ydl.download([url])
     return filename, artist, title, exit_code
+
+
+async def parse_message_for_urls(message):
+    urls = re.findall(r'https://\S+', message)
+    for url in urls:
+        yield url
+
+
+async def download_url_list(message):
+    async for url in parse_message_for_urls(message):
+        filename, artist, title, exit_code = await download_single_url(url)
+        if not exit_code:
+            yield filename, artist, title
 
 
 if __name__ == "__main__":
