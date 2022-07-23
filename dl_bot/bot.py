@@ -4,7 +4,8 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes
 from telegram.ext.filters import TEXT
 
-from dl_bot.commands import start, download_url_list, PATH, whitelist_user, whitelist_group
+from dl_bot.commands import start, download_url_list, PATH, whitelist_user, whitelist_group, un_whitelist_user, \
+    un_whitelist_group
 from dl_bot.auth_helpers import get_users
 from dl_bot.file_operations import split_large_file, get_new_files
 from dl_bot.settings import TOKEN
@@ -22,6 +23,8 @@ class DlBot:
         application.add_handler(CommandHandler('start', start))
         application.add_handler(CommandHandler('add_user', whitelist_user))
         application.add_handler(CommandHandler('add_group', whitelist_group))
+        application.add_handler(CommandHandler('remove_user', un_whitelist_user))
+        application.add_handler(CommandHandler('remove_group', un_whitelist_group))
         application.add_handler(MessageHandler(TEXT, self.url_list_message_handler))
         application.run_polling()
 

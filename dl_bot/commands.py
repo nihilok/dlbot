@@ -6,7 +6,8 @@ from pathlib import Path
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from dl_bot.auth_helpers import require_superuser, add_group_to_file, add_user_to_file
+from dl_bot.auth_helpers import require_superuser, add_group_to_file, add_user_to_file, remove_group_from_file, \
+    remove_user_from_file
 from dl_bot.yt_funcs import download_single_url
 
 PATH = Path(os.path.dirname(os.path.dirname(__file__)))
@@ -35,15 +36,39 @@ async def download_url_list(message):
 async def whitelist_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     group_id = update.effective_chat.id
     await add_group_to_file(group_id)
-    await context.bot.send_message(group_id, f"Group whitelisted: ({group_id})")
+    await context.bot.send_message(group_id, f"Group whitelisted: {group_id}")
 
 
 @require_superuser
 async def whitelist_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        user_id = update.message.reply_to_message.from_user.id
+        user = update.message.reply_to_message.from_user
+        user_id = user.id
+        user_name = user.name
         await add_user_to_file(user_id)
-        await context.bot.send_message(update.effective_chat.id, f"User whitelisted: ({user_id})")
+        await context.bot.send_message(update.effective_chat.id, f"{user_name} whitelisted")
+    except AttributeError:
+        await context.bot.send_message(
+            update.effective_chat.id,
+            "You must reply to a message to use this command."
+        )
+
+
+@require_superuser
+async def un_whitelist_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    group_id = update.effective_chat.id
+    await remove_group_from_file(group_id)
+    await context.bot.send_message(group_id, f"Group removed from whitelist: {group_id}")
+
+
+@require_superuser
+async def un_whitelist_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        user = update.message.reply_to_message.from_user
+        user_id = user.id
+        user_name = user.name
+        await remove_user_from_file(user_id)
+        await context.bot.send_message(update.effective_chat.id, f"{user_name} removed from whitelist")
     except AttributeError:
         await context.bot.send_message(
             update.effective_chat.id,
