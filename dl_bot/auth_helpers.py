@@ -52,6 +52,8 @@ async def add_user_to_file(user_id: int):
 
 async def remove_user_from_file(user_id: int):
     users = get_users()
+    if user_id not in users["users"]:
+        return
     users["users"].remove(user_id)
     with open(USER_FILE, 'w') as f:
         json.dump(users, f)
@@ -68,6 +70,8 @@ async def add_group_to_file(chat_id: int):
 
 async def remove_group_from_file(chat_id: int):
     users = get_users()
+    if chat_id not in users["chats"]:
+        return
     users["chats"].remove(chat_id)
     with open(USER_FILE, 'w') as f:
         json.dump(users, f)
