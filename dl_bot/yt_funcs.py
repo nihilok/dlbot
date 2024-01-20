@@ -33,7 +33,8 @@ async def get_metadata(url):
     with yt_dlp.YoutubeDL({"noplaylist": True}) as ydl:
         result = ydl.extract_info(url, download=False)
     artist = result.get("artist")
-    artist = ", ".join(set(artist.split(", ")))
+    artists = artist.split(", ")
+    artist = ", ".join(sorted(set(artists), key=lambda x: artists.index(x)))
     title = result.get("title") or result.get("alt_title")
     try:
         if artist is None and " - " in title:
