@@ -86,10 +86,13 @@ async def download_single_url(url):
     return filename, artist, title, exit_code
 
 
-async def download_playlist(url):
+async def download_playlist(url, send_message=None):
     """Download each video in the playlist and return the information as a list of tuples"""
     with yt_dlp.YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
+        playlist_title = info.get("title")
+        if playlist_title and send_message:
+            await send_message(f"Downloading playlist: {playlist_title} ({info.get('playlist_count')} tracks)")
         for entry in info['entries']:
             video_url = entry['original_url']
             filename, artist, title, exit_code = await download_single_url(video_url)  # Use the existing download_single_url function
@@ -102,15 +105,16 @@ async def parse_message_for_urls(message):
         yield url
 
 
-async def download_url_list(message):
+async def download_url_list(message, send_message=None):
     async for url in parse_message_for_urls(message):
         if "playlist" in url:
-            async for filename, artist, title, exit_code in download_playlist(url):
+            async for filename, artist, title, exit_code in download_playlist(url, send_message):
                 if not exit_code:
                     yield filename, artist, title
-        filename, artist, title, exit_code = await download_single_url(url)
-        if not exit_code:
-            yield filename, artist, title
+        else:
+            filename, artist, title, exit_code = await download_single_url(url)
+            if not exit_code:
+                yield filename, artist, title
 
 
 if __name__ == "__main__":

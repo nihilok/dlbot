@@ -35,7 +35,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_auth(update) is False:
         return
-    async for mp3, artist, title in download_url_list(update.message.text):
+
+    async def send_message(message: str):
+        await context.bot.send_message(update.effective_chat.id, message)
+
+    async for mp3, artist, title in download_url_list(update.message.text, send_message):
         full_path = PATH / mp3
         if split_large_file(full_path) is False:
             files = [full_path]
