@@ -32,9 +32,10 @@ async def get_metadata(url):
     logger.info(f"Downloading metadata for {url}")
     with yt_dlp.YoutubeDL({"noplaylist": True}) as ydl:
         result = ydl.extract_info(url, download=False)
-    artist = result.get("artist")
-    artists = artist.split(", ")
-    artist = ", ".join(sorted(set(artists), key=lambda x: artists.index(x)))
+    artist = result.get("artist", None)
+    if artist:
+        artists = artist.split(", ")
+        artist = ", ".join(sorted(set(artists), key=lambda x: artists.index(x)))
     title = result.get("title") or result.get("alt_title")
     try:
         if artist is None and " - " in title:
@@ -78,7 +79,7 @@ async def download_single_url(url):
     outtmpl = f"{base_name}.%(ext)s"
     filename = f"{base_name}.mp3"
     if os.path.exists(filename):
-        return filename, artist, title, 0
+        os.remove(filename)
     opts = YT_OPTS.copy()
     opts["outtmpl"] = outtmpl
     with yt_dlp.YoutubeDL(opts) as ydl:
@@ -108,13 +109,15 @@ async def parse_message_for_urls(message):
 async def download_url_list(message, send_message=None):
     async for url in parse_message_for_urls(message):
         if "playlist" in url:
-            async for filename, artist, title, exit_code in download_playlist(url, send_message):
+            async for file_bytes, artist, title, exit_code in download_playlist(url, send_message):
                 if not exit_code:
-                    yield filename, artist, title
+                    yield file_bytes, artist, title
+                yield url
         else:
-            filename, artist, title, exit_code = await download_single_url(url)
+            file_bytes, artist, title, exit_code = await download_single_url(url)
             if not exit_code:
-                yield filename, artist, title
+                yield file_bytes, artist, title
+            yield url
 
 
 if __name__ == "__main__":

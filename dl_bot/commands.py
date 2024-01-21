@@ -39,7 +39,10 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
     async def send_message(message: str):
         await context.bot.send_message(update.effective_chat.id, message)
 
-    async for mp3, artist, title in download_url_list(update.message.text, send_message):
+    async for track in download_url_list(update.message.text, send_message):
+        if isinstance(track, str):
+            continue
+        mp3, artist, title = track
         full_path = PATH / mp3
         if split_large_file(full_path) is False:
             files = [full_path]
@@ -48,8 +51,15 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
             os.remove(full_path)
         for file in files:
             await set_tags(file, title, artist)
+            if not os.path.getsize(file):
+                os.remove(file)
+                await send_message(f"Something went wrong downloading/extracting {mp3}")
+                continue
             with open(file, "rb") as f:
-                await context.bot.send_audio(update.effective_chat.id, f)
+                try:
+                    await context.bot.send_audio(update.effective_chat.id, f)
+                except Exception as e:
+                    await send_message(f"Something went wrong sending {mp3}: {e}")
             os.remove(file)
 
 
