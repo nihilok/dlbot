@@ -26,6 +26,7 @@ class File(NamedTuple):
     filename: str
     artist: str
     title: str
+    url: str
 
 
 async def get_metadata(url):
@@ -84,7 +85,8 @@ async def download_single_url(url):
     opts["outtmpl"] = outtmpl
     with yt_dlp.YoutubeDL(opts) as ydl:
         exit_code = ydl.download([url])
-    return filename, artist, title, exit_code
+    file = File(filename, artist, title, url)
+    return file, exit_code
 
 
 async def download_playlist(url, send_message=None):
@@ -96,8 +98,8 @@ async def download_playlist(url, send_message=None):
             await send_message(f"Downloading playlist: {playlist_title} ({info.get('playlist_count')} tracks)")
         for entry in info['entries']:
             video_url = entry['original_url']
-            filename, artist, title, exit_code = await download_single_url(video_url)  # Use the existing download_single_url function
-            yield filename, artist, title, exit_code
+            file, exit_code = await download_single_url(video_url)  # Use the existing download_single_url function
+            yield file, exit_code
 
 
 async def parse_message_for_urls(message):
@@ -109,14 +111,14 @@ async def parse_message_for_urls(message):
 async def download_url_list(message, send_message=None):
     async for url in parse_message_for_urls(message):
         if "playlist" in url:
-            async for file_bytes, artist, title, exit_code in download_playlist(url, send_message):
+            async for file, exit_code in download_playlist(url, send_message):
                 if not exit_code:
-                    yield file_bytes, artist, title
+                    yield file
                 yield url
         else:
-            file_bytes, artist, title, exit_code = await download_single_url(url)
+            file, exit_code = await download_single_url(url)
             if not exit_code:
-                yield file_bytes, artist, title
+                yield file
             yield url
 
 
