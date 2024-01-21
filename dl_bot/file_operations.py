@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from telegram.constants import FileSizeLimit
+
 
 async def sanitise_filename(filename):
     return filename.replace("/", "-")
@@ -18,7 +20,7 @@ def get_new_files(reverse_order=True):
 
 def split_large_file(filepath):
     file_size = os.path.getsize(filepath)
-    if file_size >= 50000000:
+    if file_size >= FileSizeLimit.FILESIZE_UPLOAD:
         subprocess.call(["mp3splt", filepath, "-t", "30.0.0"])
         return True
     return False

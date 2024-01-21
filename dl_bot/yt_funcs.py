@@ -1,24 +1,20 @@
 import logging
-import os
 import re
 from typing import NamedTuple
 
 import yt_dlp
 from mutagen.easyid3 import EasyID3
 
-from dl_bot.file_operations import sanitise_filename
-
 logger = logging.getLogger(__name__)
 
-YT_OPTS = {
-    "format": "bestaudio",
+DOWNLOAD_OPTIONS = {
+    "format": "bestaudio/best",
     "postprocessors": [
         {
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
         }
     ],
-    "extract_flat": True,
 }
 
 
@@ -29,10 +25,7 @@ class File(NamedTuple):
     url: str
 
 
-async def get_metadata(url):
-    logger.info(f"Downloading metadata for {url}")
-    with yt_dlp.YoutubeDL({"noplaylist": True}) as ydl:
-        result = ydl.extract_info(url, download=False)
+async def get_metadata_local(result):
     artist = result.get("artist", None)
     if artist:
         artists = artist.split(", ")
@@ -47,6 +40,13 @@ async def get_metadata(url):
         title = result.get("title") or result.get("alt_title")
     logger.info(f"Returning: {artist}, {title}")
     return artist, title
+
+
+async def get_metadata(url):
+    logger.info(f"Downloading metadata for {url}")
+    with yt_dlp.YoutubeDL({"noplaylist": True}) as ydl:
+        result = ydl.extract_info(url, download=False)
+    return await get_metadata_local(result)
 
 
 async def get_playlist_metadata(url):
@@ -74,32 +74,25 @@ async def set_tags(filepath, title, artist=None):
 
 
 async def download_single_url(url):
-    logger.info(f"Downloading {url}")
-    artist, title = await get_metadata(url)
-    base_name = await sanitise_filename(f'{artist + " - " if artist else ""}{title}')
-    outtmpl = f"{base_name}.%(ext)s"
-    filename = f"{base_name}.mp3"
-    if os.path.exists(filename):
-        os.remove(filename)
-    opts = YT_OPTS.copy()
-    opts["outtmpl"] = outtmpl
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        exit_code = ydl.download([url])
-    file = File(filename, artist, title, url)
-    return file, exit_code
+    with yt_dlp.YoutubeDL(DOWNLOAD_OPTIONS) as ydl:
+        result = ydl.extract_info(url, download=True)
+        if 'entries' in result:
+            info = result['entries'][0]
+        else:
+            info = result
+        artist, title = await get_metadata_local(info)
+        return File(f"{title} [{info['id']}].mp3", artist, title, url), 0
 
 
 async def download_playlist(url, send_message=None):
     """Download each video in the playlist and return the information as a list of tuples"""
-    with yt_dlp.YoutubeDL() as ydl:
-        info = ydl.extract_info(url, download=False)
+    with yt_dlp.YoutubeDL({"extract_flat": True}) as ydl:
+        info = ydl.extract_info(url)
         playlist_title = info.get("title")
         if playlist_title and send_message:
             await send_message(f"Downloading playlist: {playlist_title} ({info.get('playlist_count')} tracks)")
         for entry in info['entries']:
-            video_url = entry['original_url']
-            file, exit_code = await download_single_url(video_url)  # Use the existing download_single_url function
-            yield file, exit_code
+            yield await download_single_url(entry["url"])
 
 
 async def parse_message_for_urls(message):

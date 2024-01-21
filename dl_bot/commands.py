@@ -20,6 +20,8 @@ from dl_bot.file_operations import get_new_files, split_large_file
 from dl_bot.yt_funcs import download_url_list, set_tags
 
 PATH = Path(os.path.dirname(os.path.dirname(__file__)))
+MAX_RETRIES = 3
+RETRY_DELAY = 10
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -39,8 +41,12 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
     if await check_auth(update) is False:
         return
 
+    # Keep track of sent error message IDs, so we can delete them if retries are successful.
+    error_message_ids = []
+
     async def send_message(message: str):
-        await context.bot.send_message(update.effective_chat.id, message)
+        sent = await context.bot.send_message(update.effective_chat.id, message)
+        return sent.message_id
 
     async for track in download_url_list(update.message.text, send_message):
         if isinstance(track, str):
@@ -56,27 +62,37 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
             await set_tags(file, title, artist)
             if not os.path.getsize(file):
                 os.remove(file)
-                await send_message(f"Something went wrong downloading/extracting {mp3} from {url}")
+                await send_message(f"Something went wrong downloading/extracting {mp3} from {url} (filesize was 0)")
                 continue
-            with open(file, "rb") as f:
-                encountered_network_error = False
-                for i in range(3):
-                    time.sleep(random.randint(3, 20))
-                    try:
+
+            encountered_network_error = ""
+            retried = 0
+            for i in range(MAX_RETRIES):
+                retried = i
+                try:
+                    with open(file, "rb") as f:
                         await context.bot.send_audio(update.effective_chat.id, f)
-                        break
-                    except TimedOut:
-                        break
-                    except NetworkError as e:
-                        time.sleep(2)
-                        if not encountered_network_error:
-                            await send_message(f"Something went wrong sending {mp3} to Telegram: {e}")
-                            encountered_network_error = True
-                        if i < 2:
-                            await send_message(
-                                f"Retrying {i+1} of 2 times...")
-                        else:
-                            await send_message(f"Failed to send track. Original url: {url}")
+                    break
+                except TimedOut:
+                    break
+                except Exception as e:
+                    if not encountered_network_error == str(e):
+                        sent_id = await send_message(f"Something went wrong sending {mp3} to Telegram: {e}")
+                        error_message_ids.append(sent_id)
+                        encountered_network_error = str(e)
+                    if i < MAX_RETRIES - 1:
+                        sent_id = await send_message(
+                            f"Waiting {RETRY_DELAY} seconds and retrying ({i + 1} of {MAX_RETRIES} times)")
+                        time.sleep(RETRY_DELAY)
+                        error_message_ids.append(sent_id)
+                    else:
+                        await send_message(f"Failed to send track. Url: {url}")
+
+            if retried < MAX_RETRIES - 1:
+                for message_id in error_message_ids:
+                    await context.bot.delete_message(update.effective_chat.id, message_id)
+
+        for file in files:
             os.remove(file)
 
 
