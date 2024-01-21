@@ -68,14 +68,15 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                     except TimedOut:
                         break
                     except NetworkError as e:
+                        time.sleep(2)
                         if not encountered_network_error:
-                            time.sleep(2)
-                            await send_message(f"Something went wrong sending {mp3} to Telegram: {e}\n\nOriginal URL: {url}")
+                            await send_message(f"Something went wrong sending {mp3} to Telegram: {e}")
                             encountered_network_error = True
                         if i < 2:
-                            time.sleep(2)
                             await send_message(
                                 f"Retrying {i+1} of 2 times...")
+                        else:
+                            await send_message(f"Failed to send track. Original url: {url}")
             os.remove(file)
 
 
