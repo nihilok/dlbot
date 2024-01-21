@@ -89,7 +89,7 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                     else:
                         await send_message(f"Failed to send track. Url: {url}")
 
-            if retried < MAX_RETRIES - 1:
+            if retried < MAX_RETRIES:
                 for message_id in error_message_ids:
                     try:
                         await context.bot.delete_message(update.effective_chat.id, message_id)
