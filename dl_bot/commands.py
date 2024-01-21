@@ -59,6 +59,7 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                 await send_message(f"Something went wrong downloading/extracting {mp3} from {url}")
                 continue
             with open(file, "rb") as f:
+                encountered_network_error = False
                 for i in range(3):
                     time.sleep(random.randint(3, 20))
                     try:
@@ -67,8 +68,12 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                     except TimedOut:
                         break
                     except NetworkError as e:
-                        await send_message(f"Something went wrong sending {mp3} to Telegram: {e}\n\nOriginal URL: {url}")
+                        if not encountered_network_error:
+                            time.sleep(2)
+                            await send_message(f"Something went wrong sending {mp3} to Telegram: {e}\n\nOriginal URL: {url}")
+                            encountered_network_error = True
                         if i < 2:
+                            time.sleep(2)
                             await send_message(
                                 f"Retrying {i+1} of 2 times...")
             os.remove(file)
