@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 import time
 from pathlib import Path
 
@@ -59,6 +60,7 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                 continue
             with open(file, "rb") as f:
                 for i in range(3):
+                    time.sleep(random.randint(3, 20))
                     try:
                         await context.bot.send_audio(update.effective_chat.id, f)
                         break
@@ -67,7 +69,6 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                     except NetworkError as e:
                         await send_message(f"Something went wrong sending {mp3} to Telegram: {e}\n\nOriginal URL: {url}")
                         if i < 2:
-                            time.sleep(5)
                             await send_message(
                                 f"Retrying {i+1} of 2 times...")
             os.remove(file)
