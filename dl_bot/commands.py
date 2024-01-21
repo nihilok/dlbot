@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 from telegram import Update
-from telegram.error import NetworkError, TimedOut
+from telegram.error import NetworkError, TimedOut, BadRequest
 from telegram.ext import ContextTypes
 
 from dl_bot.auth_helpers import (
@@ -91,7 +91,10 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
 
             if retried < MAX_RETRIES - 1:
                 for message_id in error_message_ids:
-                    await context.bot.delete_message(update.effective_chat.id, message_id)
+                    try:
+                        await context.bot.delete_message(update.effective_chat.id, message_id)
+                    except BadRequest:
+                        pass
 
         for file in files:
             os.remove(file)
