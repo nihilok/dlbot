@@ -41,9 +41,6 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
     if await check_auth(update) is False:
         return
 
-    # Keep track of sent error message IDs, so we can delete them if retries are successful.
-    error_message_ids = []
-
     async def send_message(message: str):
         sent = await context.bot.send_message(update.effective_chat.id, message)
         return sent.message_id
@@ -65,7 +62,11 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                 await send_message(f"Something went wrong downloading/extracting {mp3} from {url} (filesize was 0)")
                 continue
 
+            # Keep track of error text, so we don't send the same error twice in a row.
             encountered_network_error = ""
+            # Keep track of sent error message IDs, so we can delete them if retries are successful.
+            error_message_ids = []
+            # Track total number of tries
             retried = 0
             for i in range(MAX_RETRIES):
                 retried = i
