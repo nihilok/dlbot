@@ -49,7 +49,8 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
         if isinstance(track, str):
             continue
         mp3, artist, title, url = track
-        full_path = PATH / mp3
+        # full_path = PATH / mp3
+        full_path = mp3
         if split_large_file(full_path) is False:
             files = [full_path]
         else:

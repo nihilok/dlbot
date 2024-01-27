@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 from typing import NamedTuple
 
@@ -8,6 +9,7 @@ from mutagen.easyid3 import EasyID3
 logger = logging.getLogger(__name__)
 
 DOWNLOAD_OPTIONS = {
+    "outtmpl": "%(id)s.%(ext)s",
     "format": "bestaudio/best",
     "postprocessors": [
         {
@@ -81,7 +83,10 @@ async def download_single_url(url):
         else:
             info = result
         artist, title = await get_metadata_local(info)
-        return File(f"{title} [{info['id']}].mp3", artist, title, url), 0
+        filename = f"{info['id']}.mp3"
+        if os.path.exists(filename):
+            return File(filename, artist, title, url), 0
+        return File(filename, artist, title, url), 0
 
 
 async def download_playlist(url, send_message=None):
