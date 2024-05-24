@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import random
 import time
@@ -36,9 +37,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id, text="dlbot at your service, boop beep!"
     )
 
+logger = logging.getLogger(__name__)
+
 
 async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_auth(update) is False:
+        return
+
+    if update.message is None:
+        # Not sure why/when this occurs, but there was an AttributeError in the logs when message is None
+        logger.warning(f"Update.message is None: {update.__dict__=}")
         return
 
     async def send_message(message: str):
