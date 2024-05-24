@@ -1,12 +1,11 @@
 import datetime
 import logging
 import os
-import random
 import time
 from pathlib import Path
 
 from telegram import Update
-from telegram.error import NetworkError, TimedOut, BadRequest
+from telegram.error import TimedOut, BadRequest
 from telegram.ext import ContextTypes
 
 from dl_bot.auth_helpers import (
