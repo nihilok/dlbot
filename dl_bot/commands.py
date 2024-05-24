@@ -81,7 +81,7 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                 retried = i
                 try:
                     with open(file, "rb") as f:
-                        logger.info(f"Sending {artist} - {title} ({url}) to {update.effective_chat.username or update.effective_chat.id}")
+                        logger.info(f"Sending {artist} - {title} ({url}) to @{update.effective_chat.username or update.effective_chat.id}")
                         await context.bot.send_audio(update.effective_chat.id, f)
                     break
                 except TimedOut:
@@ -100,7 +100,7 @@ async def url_list_message_handler(update: Update, context: ContextTypes.DEFAULT
                         time.sleep(RETRY_DELAY)
                         error_message_ids.append(sent_id)
                     else:
-                        logger.error(f"Failed to send track {file} ({url}) to {update.effective_chat.id}")
+                        logger.error(f"Failed to send track {file} ({url}) to @{update.effective_chat.username or update.effective_chat.id}")
                         await send_message(f"Failed to send track. Url: {url}")
 
             if retried < MAX_RETRIES:
