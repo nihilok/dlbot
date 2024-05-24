@@ -40,7 +40,6 @@ async def get_metadata_local(result):
     except IndexError:
         artist = None
         title = result.get("title") or result.get("alt_title")
-    logger.info(f"Returning: {artist}, {title}")
     return artist, title
 
 
@@ -86,7 +85,7 @@ async def download_single_url(url):
         filename = f"{info['id']}.mp3"
         if os.path.exists(filename):
             return File(filename, artist, title, url), 0
-        return File(filename, artist, title, url), 0
+        raise FileNotFoundError(f"{filename} not found")
 
 
 async def download_playlist(url, send_message=None):
